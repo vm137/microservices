@@ -3,6 +3,10 @@
 *.iml
 *.ipr
 
+/doc/
+/postman/
+/sample-mp3/
+
 .gradle
 build/
 
