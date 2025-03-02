@@ -22,7 +22,7 @@ public class ResourceEntity {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @Lob
+    @Lob
     private byte[] content;
 
     private String timestamp;

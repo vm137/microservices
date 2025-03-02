@@ -15,6 +15,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -33,11 +34,13 @@ public class SongService {
     static final String SONG_DURATION_TAG = "xmpDM:duration";
     static final String SONG_YEAR_TAG = "xmpDM:releaseDate";
 
-    public SongDto parseTags(InputStream dataStream) {
+    public SongDto parseTags(byte[] byteArray) {
         ContentHandler handler = new DefaultHandler();
         Metadata metadata = new Metadata();
         Mp3Parser parser = new Mp3Parser();
         ParseContext context = new ParseContext();
+
+        InputStream dataStream = new ByteArrayInputStream(byteArray);
 
         try {
             parser.parse(dataStream, handler, metadata, context);
