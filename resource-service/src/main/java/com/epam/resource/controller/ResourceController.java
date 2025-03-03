@@ -1,10 +1,7 @@
 package com.epam.resource.controller;
 
-import com.epam.resource.exceptions.ResourceException;
-import com.epam.resource.model.dto.SongDto;
 import com.epam.resource.model.http.response.ResourceResponse;
 import com.epam.resource.service.ResourceService;
-import com.epam.resource.service.SongService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
@@ -26,29 +23,16 @@ public class ResourceController {
 
     private final ResourceService resourceService;
 
-    private final SongService songService;
-
     @PostMapping(value = "/resources", consumes = "audio/mpeg")
     public ResponseEntity<ResourceResponse> saveResource(InputStream dataStream) {
-        byte[] byteArray;
-        try {
-            byteArray = IOUtils.toByteArray(dataStream);
-        } catch (IOException e) {
-            throw new ResourceException("Cannot convert audio/mpeg file to bytes");
-        }
-
-        Long savedId = resourceService.saveResource(byteArray);
-        SongDto songDto = songService.parseTags(byteArray);
-        songDto.setId(savedId);
-//        songService.saveSongData(songDto);
-
+        Long savedId = resourceService.saveResource(dataStream);
         ResourceResponse response = new ResourceResponse(savedId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/resources/{id}")
     public void getResource(@PathVariable long id, HttpServletResponse response) throws IOException {
-        byte[] content = resourceService.getResource(id);
+        byte[] content = resourceService.getResource(id); // we need this to get content length
         InputStream inputStream = new ByteArrayInputStream(content);
         IOUtils.copy(inputStream, response.getOutputStream());
 
