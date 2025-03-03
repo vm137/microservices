@@ -3,9 +3,11 @@ package com.epam.resource.service;
 import com.epam.resource.exceptions.ResourceException;
 import com.epam.resource.exceptions.SongServiceException;
 import com.epam.resource.model.dto.SongDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import okhttp3.Call;
-import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -26,11 +28,11 @@ import java.io.InputStream;
 @Service
 @RequiredArgsConstructor
 public class SongService {
-    
-    @Value("${song-service.base-url}")
-    private String songServiceBaseUrl;
 
     private final OkHttpClient client;
+
+    @Value("${song-service.base-url}")
+    private String songServiceBaseUrl;
 
     private static final String SONG_NAME_TAG = "dc:title";
     private static final String SONG_ARTIST_TAG = "xmpDM:artist";
@@ -38,20 +40,19 @@ public class SongService {
     private static final String SONG_DURATION_TAG = "xmpDM:duration";
     private static final String SONG_YEAR_TAG = "xmpDM:releaseDate";
 
+    @SneakyThrows
     public void storeMetadata(Long id, byte[] byteArray) {
         SongDto songDto = parseTags(byteArray);
         songDto.setId(id);
 
-        RequestBody body = new FormBody.Builder()
-                .add("name", songDto.getName() )
-                .add("artist", songDto.getArtist() )
-                .add("album", songDto.getAlbum() )
-                .add("duration", songDto.getDuration() )
-                .add("year", songDto.getYear() )
-                .build();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(songDto);
 
-        Request request = new Request.Builder()
-                .url(songServiceBaseUrl + "/songs/" + id)
+        MediaType contentType = MediaType.get("application/json");
+        RequestBody body = RequestBody.create(json, contentType);
+
+                Request request = new Request.Builder()
+                .url(songServiceBaseUrl + "/songs")
                 .post(body)
                 .build();
 
@@ -78,10 +79,10 @@ public class SongService {
     }
 
     private String convertDuration(String durationStr) {
-        int seconds = (int) (Double.parseDouble(durationStr));
+        int seconds = (int) Math.ceil(Double.parseDouble(durationStr));
         int mm = (int) Math.floor(seconds / 60.);
         int ss = seconds - mm * 60;
-        return String.format("%s:%s", mm, ss);
+        return String.format("%02d:%02d", mm, ss);
     }
 
     private static Metadata getMetadata(byte[] byteArray) {
