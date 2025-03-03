@@ -1,11 +1,14 @@
 package com.epam.resource.service;
 
+import com.epam.resource.exceptions.ResourceException;
 import com.epam.resource.exceptions.SongServiceException;
 import com.epam.resource.model.dto.SongDto;
 import lombok.RequiredArgsConstructor;
 import okhttp3.Call;
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -39,13 +42,25 @@ public class SongService {
         SongDto songDto = parseTags(byteArray);
         songDto.setId(id);
 
+        RequestBody body = new FormBody.Builder()
+                .add("name", songDto.getName() )
+                .add("artist", songDto.getArtist() )
+                .add("album", songDto.getAlbum() )
+                .add("duration", songDto.getDuration() )
+                .add("year", songDto.getYear() )
+                .build();
+
         Request request = new Request.Builder()
                 .url(songServiceBaseUrl + "/songs/" + id)
+                .post(body)
                 .build();
 
         Call call = client.newCall(request);
-//        Response response2 = call.execute();
-
+        try {
+            call.execute();
+        } catch (IOException e) {
+            throw new ResourceException("Could not save metadata for id: " + id);
+        }
     }
 
     public SongDto parseTags(byte[] byteArray) {
